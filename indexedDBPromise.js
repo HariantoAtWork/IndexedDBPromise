@@ -4,13 +4,13 @@ const IndexedDBPromise = function (databaseName, options) {
         IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange,
         DB = {}
 
-    const log = () => {
+    const log = function() {
         if (options && options.hasOwnProperty('debug') && options.debug) {
             console.log.apply(console, arguments)
         }
     }
 
-    const error = () => {
+    const error = function() {
         if (options && options.hasOwnProperty('debug') && options.debug) {
             console.error.apply(console, arguments)
         }
@@ -77,8 +77,7 @@ const IndexedDBPromise = function (databaseName, options) {
                 Promise.all(promises)
                     .then(result => { db.close(); return result })
             )
-                
-            
+
         } else if (data && !Array.isArray(data) && typeof data === 'object') {
             tx.onsuccess = log.bind(console, 'put Object')
             resolve(
@@ -144,6 +143,7 @@ const IndexedDBPromise = function (databaseName, options) {
 
     const readonlyTransaction = (databaseName, tableName) => openDB(databaseName)
         .then(upgradeDatabaseOnNewObjectStore.bind(upgradeDatabaseOnNewObjectStore, tableName))
+        .then(upgradeDatabaseOnNewObjectStore.bind(upgradeDatabaseOnNewObjectStore, tableName))
         .then(openTransaction.bind(openTransaction, 'readonly'))
 
     const readwriteTransaction = (databaseName, tableName) => openDB(databaseName)
@@ -152,42 +152,8 @@ const IndexedDBPromise = function (databaseName, options) {
         .then(openTransaction.bind(openTransaction, 'readwrite'))
 
     this.CRUD = function (tableName) {
-        const tx = readwriteTransaction(databaseName, tableName)
-        this.put = data => tx.then(put.bind(put, data))
-        this.get = id => tx.then(get.bind(get, id))
-        this.getAll = () => tx.then(getAll.bind(getAll, {}))
+        this.put = data => readwriteTransaction(databaseName, tableName).then(put.bind(put, data))
+        this.get = id => readonlyTransaction(databaseName, tableName).then(get.bind(get, id))
+        this.getAll = () => readonlyTransaction(databaseName, tableName).then(getAll.bind(getAll, {}))
     }
-
 }
-
-
-// Example
-const data0 = [
-    { title: 'Quarry Memories', author: 'Fred', isbn: 123456 },
-    { title: 'Stuff is edited', author: 'Harianto', isbn: 345678 },
-    { title: 'All your base are belong to us', author: 'Fred', isbn: 234567 }
-]
-const data1 = [
-    { title: 'Another', author: 'Fred', isbn: 123456 },
-    { title: 'Something great', author: 'Harianto', isbn: 345678 },
-    { title: 'IndexedD I hate it', author: 'Fred', isbn: 234567 }
-]
-const data2 = [
-    { title: 'AAA', author: 'AAA-AAA', isbn: 123456 },
-    { title: 'BBB', author: 'BBB-BBB', isbn: 345678 },
-    { title: 'CCC', author: 'CCC-CCC', isbn: 234567 }
-]
-const DB = new IndexedDBPromise('somethingDb')
-
-const users = new DB.CRUD('users')
-const books = new DB.CRUD('books')
-
-
-users.put(data0).then(console.log.bind(console, 'PUT'))
-users.put(data1).then(console.log.bind(console, 'PUT'))
-books.put(data2).then(console.log.bind(console, 'PUT'))
-
-
-books.getAll().then(console.log.bind(console))
-users.getAll().then(console.log.bind(console))
-books.get(2).then(console.log.bind(console))

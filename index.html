@@ -7,7 +7,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-    <h1>Hello world</h1>
-    <script src="indexedDBPromise.js"></script> 
+    <h1>IndexedDBPromise</h1>
+    <script src="indexedDBPromise.js"></script>
+    <script>
+        const DB = new IndexedDBPromise('somethingDb', { debug: true })
+
+        // Example
+        const data0 = [
+            { title: 'Quarry Memories', author: 'Fred', isbn: 123456 },
+            { title: 'Stuff is edited', author: 'Harianto', isbn: 345678 },
+            { title: 'All your base are belong to us', author: 'Fred', isbn: 234567 }
+        ]
+        const data1 = [
+            { title: 'Another', author: 'Fred', isbn: 123456 },
+            { title: 'Something great', author: 'Harianto', isbn: 345678 },
+            { title: 'IndexedD I hate it', author: 'Fred', isbn: 234567 }
+        ]
+        const data2 = [
+            { title: 'AAA', author: 'AAA-AAA', isbn: 123456 },
+            { title: 'BBB', author: 'BBB-BBB', isbn: 345678 },
+            { title: 'CCC', author: 'CCC-CCC', isbn: 234567 }
+        ]
+
+
+        const users = new DB.CRUD('users')
+        const books = new DB.CRUD('books')
+
+
+        users.put(data0).then(console.log.bind(console, 'PUT'))
+        users.put(data1).then(console.log.bind(console, 'PUT'))
+        books.put(data2).then(console.log.bind(console, 'PUT'))
+
+
+        books.getAll().then(console.log.bind(console))
+        users.getAll().then(console.log.bind(console))
+        books.get(2).then(console.log.bind(console))
+
+        setTimeout(() => {
+            books.put([...data0, ...data1, ...data2])
+            .then(console.log.bind(console, 'ID put:'))
+        }, 5e3);
+    </script>
 </body>
 </html>
