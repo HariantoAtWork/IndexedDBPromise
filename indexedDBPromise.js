@@ -131,6 +131,34 @@ const IndexedDBPromise = function (databaseName, tableName, options) {
         result.onerror = (error) => { db.close(); reject(error) }
     })
 
+    const removeDataFromStoreById = ({ store, id }) => new Promise((resolve, reject) => {
+        const request = store.delete(id)
+        request.onsuccess = (event) => resolve(event.target.result)
+        request.onerror = (error) => reject(error)
+    })
+
+    const remove = (id, { store, tx, db }) => new Promise((resolve, reject) => {
+        if (Array.isArray(id)) {
+            const promises = []
+            id.forEach(item => {
+                promises.push(removeDataFromStoreById({ store, id: item }))
+            })
+            tx.onsuccess = log.bind(console, 'remove Array')
+            resolve(
+                Promise.all(promises)
+                    .then(result => { db.close(); return result })
+            )
+        } else if (id && !Array.isArray(id) && typeof id === 'object') {
+            reject('remove: No object data! <string, number, array>')
+        } else {
+            tx.onsuccess = log.bind(console, 'remove Object')
+            resolve(
+                removeDataFromStoreById({ store, id })
+                    .then(result => { db.close(); return result })
+            )
+        }
+    })
+
     const deleteDatabase = databaseName => new Promise((resolve, reject) => {
         const request = indexedDB.deleteDatabase(databaseName)
         request.onerror = reject
@@ -151,6 +179,7 @@ const IndexedDBPromise = function (databaseName, tableName, options) {
         .then(openTransaction.bind(openTransaction, 'readwrite'))
 
     this.put = data => readwriteTransaction(databaseName, tableName).then(put.bind(put, data))
+    this.remove = id => readwriteTransaction(databaseName, tableName).then(remove.bind(remove, id))
     this.get = id => readonlyTransaction(databaseName, tableName).then(get.bind(get, id))
     this.getAll = () => readonlyTransaction(databaseName, tableName).then(getAll.bind(getAll, {}))
 }
