@@ -10,8 +10,6 @@
     <h1>IndexedDBPromise</h1>
     <script src="indexedDBPromise.js"></script>
     <script>
-        const DB = new IndexedDBPromise('somethingDb', { debug: true })
-
         // Example
         const data0 = [
             { title: 'Quarry Memories', author: 'Fred', isbn: 123456 },
@@ -30,8 +28,8 @@
         ]
 
 
-        const users = new DB.CRUD('users')
-        const books = new DB.CRUD('books')
+        const users = new IndexedDBPromise('somethingDb', 'users', { debug: true })
+        const books = new IndexedDBPromise('somethingDb', 'books', { debug: true })
 
 
         users.put(data0).then(console.log.bind(console, 'PUT'))

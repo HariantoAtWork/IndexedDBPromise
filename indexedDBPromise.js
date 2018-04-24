@@ -1,8 +1,7 @@
-const IndexedDBPromise = function (databaseName, options) {
+const IndexedDBPromise = function (databaseName, tableName, options) {
     var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB,
         IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || { READ_WRITE: "readwrite" }, // This line should only be needed if it is needed to support the object's constants for older browsers
-        IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange,
-        DB = {}
+        IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
 
     const log = function() {
         if (options && options.hasOwnProperty('debug') && options.debug) {
@@ -119,10 +118,10 @@ const IndexedDBPromise = function (databaseName, options) {
 
     const getAll = ({ query, count }, { store, tx, db }) => new Promise((resolve, reject) => {
         let result
-        if (count) {
+        if (query != undefined && count != undefined) {
             log({ count })
             result = store.getAll(query, count)
-        } else if (query) {
+        } else if (query != undefined) {
             log({ query })
             result = store.getAll(query)
         } else {
@@ -151,9 +150,7 @@ const IndexedDBPromise = function (databaseName, options) {
         .then(upgradeDatabaseOnNewObjectStore.bind(upgradeDatabaseOnNewObjectStore, tableName)) // this works, but need to refactor
         .then(openTransaction.bind(openTransaction, 'readwrite'))
 
-    this.CRUD = function (tableName) {
-        this.put = data => readwriteTransaction(databaseName, tableName).then(put.bind(put, data))
-        this.get = id => readonlyTransaction(databaseName, tableName).then(get.bind(get, id))
-        this.getAll = () => readonlyTransaction(databaseName, tableName).then(getAll.bind(getAll, {}))
-    }
+    this.put = data => readwriteTransaction(databaseName, tableName).then(put.bind(put, data))
+    this.get = id => readonlyTransaction(databaseName, tableName).then(get.bind(get, id))
+    this.getAll = () => readonlyTransaction(databaseName, tableName).then(getAll.bind(getAll, {}))
 }
